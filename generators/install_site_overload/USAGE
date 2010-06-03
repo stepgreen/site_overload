@@ -1,0 +1,8 @@
+Description:
+
+Takes a single parameter which is the name of your user table.
+
+Copies the SiteOverload library to your Rails applications /lib directory, and adds a migration to add default_site_id to your user model.
+
+Example:
+    ./script/generate install_site_overload User
