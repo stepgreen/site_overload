@@ -1,0 +1,24 @@
+Description:
+    Creates an overloaded site instance. It will create a db migration to add the site details to Site. Make sure that after adding a site you 
+    modify the created migration to set the FQDs (Fully Qualified Domains) correctly for each environment.
+    
+    To properly test a site locally, you may need to update your hosts file to include the FQD for the development environment.
+    The convention used for development/local FQDs is that they end in .dev
+
+Example:
+    ./script/generate site_overload Thing
+
+    This will create:
+    	db/migrate/SiteDataMigration
+        sites/
+        sites/Thing
+        sites/Thing/app/
+        sites/Thing/app/views
+        sites/Thing/app/views/layouts
+        sites/Thing/public/
+        sites/Thing/public/images
+        sites/Thing/public/javascript
+        sites/Thing/public/stylesheets
+        
+        
+        

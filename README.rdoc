@@ -1,0 +1,145 @@
+= SiteOverload
+
+Buiding on theme_support (http://github.com/aussiegeek/theme_support/tree/master), site_overload allows you to mod a site without having to completely retheme.
+
+Initially designed for the StepGreen project (http://www.stepgreen.org) to allow us to publish different sites (with different subdomains) for studies.
+In most cases the changes were minor, using the majority of the main sites views and images.
+
+Differences from theme_support:
+
+* plugs in to a already functioning site with no changes necessary for it to work out of the box
+* main site does not need to be themed - everything stays where it is
+* no special helpers to use. Just use the usual helpers for images and templates - it does the right thing.
+* overloading means that unless you replace something, the default is used
+
+== FAQ
+
+1. <b>Do all sites use the same database?</b>
+   Yes... But with overloading of controllers, you could have an overloaded controller use a different database. (untested)
+
+2. <b>What's wrong with theme_support?</b>
+   Nothing. It just didn't give us the flexibility we needed. If all you want is to enable theming, then use theme_support. Theme_generator also requires
+   some work to set up, such as converting your current set of views into a default theme. We had specific requirements for allowing us to run sites for studies. 
+   SiteOverload is part of the solution for those requirements.
+
+3. <b>Can a site change the layout?</b>
+   Yes. But you don't have to change your current layout setting in the application controller if you don't want to. Just make sure the site has a layout of the 
+   same name set in its views.
+
+== Running Locally
+
+To test the domain functionality locally, you will need to add entries into your local hosts file (/etc/hosts in *nix systems).
+e.g. to test mydomain.dev use
+
+<tt>127.0.0.1 localhost mydomain.dev</tt>
+
+We recommend using the fake TLD .dev for local testing. The SiteOverload site migrations are specifically set out to allow you to 
+use different domain names in each environment you may run in (production, staging, test and development by default)
+
+== How to Use SiteOverload
+
+1. Install the plugin.
+   <tt>script/generate install_site_overload <sitename></tt>
+2. At this point every`thing will still work.
+3. When you are ready to add a new site, create it with:
+   <tt>script/generate overload_site <sitename></tt>
+4. Add whatever layouts and views you need in the sites/<sitename>/app/views directory
+5. Images/javascript/stylesheets go in the sites/<sitename>/public/ directories
+6. In ApplicationController, load the SiteOverload library, and optionally check that the requested domain is one you know about:
+	include SiteOverload
+	before_filter :check_domain_exists
+	
+6. Select the site you want to display. This is done in the application controller with either
+	site :select_sitename
+   or
+	site 'sitename'
+	
+	def select_sitename
+		# select site here
+	end
+
+   If site is given a nil value then the default site is used.
+
+7. Cache the public files using rake sites:cache:update
+8. Any site that you want to "work" needs to have its <tt>is_live</tt> attribute set to true. This is handy for enabling a site in development but not having it live on production until you are ready.
+9. That's it!
+
+== Deploying Sites
+
+Although you cache the public site files locally when developing, it is recommended that you do not put public/sites under version control, but instead cache on deployment.
+If you are using Capistrano, this can be done by running the rake sites:cache:create in the :after_update_code task
+
+In config/deploy.rb:
+	task :after_update_code, :roles => :app do
+	  run "cd #{release_path}; RAILS_ENV=#{rails_env} rake sites:cache:create"
+	end
+
+== New Helper Methods
+
+In order for site_overload to work correctly, all view assets should be referenced programmatically, e.g. with image_path(). To facilitate assets which are not normally dealt with in this way, we provide a generic helper method <tt>asset_path(asset, source)</tt>. The asset should have an equivalent directory under <tt>/public/</tt>
+
+E.g., you have a flash movie called <tt>demo.swf</tt>. Your main site would have this as stored in <tt>/public/flash/demo.swf</tt> and it would have its file source referenced in a view with <tt>asset_path('flash', 'demo.swf')</tt>. If you have a site called <tt>my_other_site</tt> that wants to replace this with it's own version, simply put it in <tt>/sites/my_other_site/public/flash/demo.swf</tt>.  The view will pick up the correct version with needing to overload the entire view.
+
+== Replace only what's needed
+=== Assets
+If you have sites that only need new assets such as images, site_overload makes this easy. Simply create assets with the same name as the original under that sites public directory,
+e.g. you have a logo image for your main site that you want to replace in my_other_site
+	/public/images/logo.png
+and to overload it in <tt>my_other_site</tt>
+	/sites/my_other_site/public/images/logo.png
+Just ensure that in the view, the image is referenced with <tt>image_tag()</tt>
+
+=== Views
+If providing new assets isn't enough and you need to replace a view, just put the replacement view in the sites relevant <tt>app/views/</tt> folder. You can overload main templates and partials.
+e.g. you want to overload your sites <tt>blog/_entry.html.erb</tt> partial: 
+	/app/views/blogs/_entry.html.erb
+and to overload it in <tt>my_other_site</tt>
+	/sites/my_other_site//app/views/blogs/_entry.html.erb
+
+=== Controllers
+The real hidden power of site_overload is the ability to modify the way that controllers work on a site specific basis.
+
+For example, you want your <tt>my_other_site</tt> to do something different when listing your blog entries.
+
+In the main sites blog controller <tt>/app/controllers/blogs_controller.rb</tt>, you have the <tt>index</tt> method as normal.
+
+To overload, add a new controller file with the same name pre-pended with <tt>site_</tt>, i.e. <tt>/sites/my_other_site/app/controllers/site_blogs_controller.rb</tt>. In that file, provide your new <tt>index</tt> method.
+
+== Models
+Whilst site_overload does not specifically allow for overloading of models, you can make models site aware.
+
+Example: you have blogs that should only appear on certain sites.
+
+In the blog model <tt>blog.rb</tt>,
+	belongs_to :site
+	
+	# named scope to allow us to list actions particular for a site
+  	named_scope :for_site, lambda { |site|
+	    { :conditions => { :site_id => site.id } }
+	}
+  
+and in your blogs_controller:
+	@blogs = Blogs.for_site(@current_site).find...
+
+== Keeping it DRY
+
+site_overload helps to enforce the MVC model. Your business logic should (as far as possible) exist within the model, with controllers managing users interaction with that, and views providing the interface.
+
+== Future Work
+* site specific routing
+* site specific helpers
+* We need tests!
+* Update to work with Rails 3
+
+== Which version of Rails does this work with?
+
+site_overload was originally written to work with Rails 2.1, and is currently used in production with Rails 2.3.3. Your mileage with other versions may vary.  
+
+== Other Info
+Author:: Robert Thompson 
+License:: Copyright (c) 2009-2010 StepGreen.org. Released under the same license as Ruby.
+About Stepgreen:: http://www.stepgreen.org. StepGreen is a free service provided by the Human Computer Interaction Institute at Carnegie Mellon University.
+
+== Warrenty
+
+This software is provided "as is" and without any express or implied warranties, including, without limitation, the implied warranties of merchantibility and fitness for a particular purpose. 
