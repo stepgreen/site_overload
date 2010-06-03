@@ -38,11 +38,16 @@ use different domain names in each environment you may run in (production, stagi
 
 == How to Use SiteOverload
 
-1. Install the plugin.
-   <tt>script/generate install_site_overload <sitename></tt>
+1. Download the plugin.
+   <tt>script/plugin install git://github.com/stepgreen/site_overload.git</tt>
+2. Optionally (but recommended to get you started), run the installer to add the site_overload library and default migrations. Takes the name of your user model
+   <tt>script/generate install_site_overload User</tt>
 2. At this point every`thing will still work.
 3. When you are ready to add a new site, create it with:
    <tt>script/generate overload_site <sitename></tt>
+4. If you want your users to be associated with a site, add this to your users model:
+	# this is the users default site if set
+  	belongs_to :default_site, :class_name => 'Site'
 4. Add whatever layouts and views you need in the sites/<sitename>/app/views directory
 5. Images/javascript/stylesheets go in the sites/<sitename>/public/ directories
 6. In ApplicationController, load the SiteOverload library, and optionally check that the requested domain is one you know about:
