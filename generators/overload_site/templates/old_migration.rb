@@ -20,8 +20,8 @@ class <%= migration_name %> < ActiveRecord::Migration
       s.is_default = false
       s.fully_qualified_domain = 'staging.<%= file_name %>'
       s.description = '<%= file_name %>'
-      s.email_contact = 'contact@<%= file_name %>'
-      s.email_reply_to = 'no-reply@<%= file_name %>'
+      s.email_contact = 'contact@staging.<%= file_name %>'
+      s.email_reply_to = 'no-reply@staging.<%= file_name %>'
       s.port = nil
       # if you want the site to be live immediately after migrating, set this to true
       s.is_live = false
@@ -32,8 +32,8 @@ class <%= migration_name %> < ActiveRecord::Migration
       s.is_default = false
       s.fully_qualified_domain = 'test.<%= file_name %>'
       s.description = '<%= file_name %>'
-      s.email_contact = 'contact@<%= file_name %>'
-      s.email_reply_to = 'no-reply@<%= file_name %>'
+      s.email_contact = 'contact@test.<%= file_name %>'
+      s.email_reply_to = 'no-reply@test.<%= file_name %>'
       s.port = nil
       # if you want the site to be live immediately after migrating, set this to true
       s.is_live = false
@@ -44,8 +44,8 @@ class <%= migration_name %> < ActiveRecord::Migration
       s.is_default = false
       s.fully_qualified_domain = '<%= file_name %>.dev'
       s.description = '<%= file_name %>'
-      s.email_contact = 'contact@<%= file_name %>'
-      s.email_reply_to = 'no-reply@<%= file_name %>'
+      s.email_contact = 'contact@<%= file_name %>.dev'
+      s.email_reply_to = 'no-reply@<%= file_name %>.dev'
       s.port = nil
       # if you want the site to be live immediately after migrating, set this to true
       s.is_live = false
